@@ -68,37 +68,28 @@ def my_excepthook(excType, excValue, traceback, logger=log):
 sys.excepthook = my_excepthook
 
 log.debug("-----------------------")
-if args.cef_server:
-    CEFSERVER = args.cef_server
-else:
-    CEFSERVER = "127.0.0.1"
-if args.cef_port:
-    CEFPORT = args.cef_port
-else:
-    CEFPORT = "514"
+CEFSERVER = args.cef_server or "127.0.0.1"
+CEFPORT = args.cef_port or "514"
 if args.event_sample:
-    log.debug(f'Parsing a custom sample event..')
+    log.debug('Parsing a custom sample event..')
     EVENTSAMPLE = os.path.abspath(args.event_sample)
     if (os.path.isdir(EVENTSAMPLE)):
-        EVENTSAMPLE =  glob.glob("{}\*.yaml".format(EVENTSAMPLE))
+        EVENTSAMPLE = glob.glob(f"{EVENTSAMPLE}\*.yaml")
     else:
         EVENTSAMPLE =  glob.glob(EVENTSAMPLE)
     # Read Yaml Files
     log.debug("Reading CEF event samples..")
     samples_loaded = [yaml.safe_load(open(sample).read()) for sample in EVENTSAMPLE]
 else:
-    log.debug(f'Parsing a default sample event..')
-    samples_loaded = []
-    sample_event = dict()
-    sample_event['name'] = "Default Sample"
-    sample_event['priority'] = dict()
+    log.debug('Parsing a default sample event..')
+    sample_event = {'name': "Default Sample", 'priority': {}}
     sample_event['priority']['facility'] = 'local4'
     sample_event['priority']['level'] = 'warn'
     # Reference: https://github.com/Azure/Azure-Sentinel/blob/master/DataConnectors/CEF/cef_troubleshoot.py#L86
     sample_event['event'] = "0|TestCommonEventFormat|MOCK|common=event-format-test|end|TRAFFIC|1|rt=$common=event-formatted-receive_time deviceExternalId=0002D01655 src=1.1.1.1 dst=2.2.2.2 sourceTranslatedAddress=1.1.1.1 destinationTranslatedAddress=3.3.3.3 cs1Label=Rule cs1=CEF_TEST_InternetDNS "
-    samples_loaded.append(sample_event)
+    samples_loaded = [sample_event]
 if args.replace_values:
-    log.debug(f'Parsing replace file..')
+    log.debug('Parsing replace file..')
     REPLACEFILE = os.path.abspath(args.replace_values)
     REPLACEVALUES = yaml.safe_load(open(REPLACEFILE).read())
     log.debug(f'Values to replace: {REPLACEVALUES}')
